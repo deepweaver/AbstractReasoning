@@ -56,7 +56,7 @@ class NormalDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         # return one item on the index
         if self.train:
-            data = np.load(self.datapath+"analogy_novel.domain.transfer_train_normal_{}.npz".format(index))
+            data = np.load(self.datapath+"analogy_novel.domain.transfer_train_normal_{}.npz".format(index+1))
             panels = data['image'].reshape((9,160,160)).astype(np.uint8)
             newpanels = np.zeros((9,80,80), dtype=np.float64)
             for j in range(9):
@@ -65,7 +65,7 @@ class NormalDataset(torch.utils.data.Dataset):
                 newpanels[j,:,:] = np.asarray(img, dtype=np.float64)
             return torch.from_numpy(newpanels).float(), torch.from_numpy(np.asarray(data['target'], dtype=np.int64))
         else:
-            data = np.load(self.datapath+"analogy_novel.domain.transfer_test_normal_{}.npz".format(index))
+            data = np.load(self.datapath+"analogy_novel.domain.transfer_test_normal_{}.npz".format(index+1))
             panels = data['image'].reshape((9,160,160)).astype(np.uint8)
             newpanels = np.zeros((9,80,80), dtype=np.float64)
             for j in range(9):
