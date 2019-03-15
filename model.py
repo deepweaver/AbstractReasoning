@@ -7,6 +7,7 @@ class CRModel(nn.Module):
     def __init__(self):
         super(CRModel, self).__init__()
         self.NUM_PANELS = 9
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.cnn = nn.Sequential(
             # torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
             nn.Conv2d(1, 32, 3, 2),
@@ -21,7 +22,7 @@ class CRModel(nn.Module):
             nn.Conv2d(32, 32, 3, 2),
             nn.BatchNorm2d(32),
             nn.ReLU()
-        )
+        ).to(self.device)
     def panel_embeddings(self, panels):
         batch_size = panels.shape[0] # which is 1 or 128 ...
         panel_num = panels.shape[1] # which is 9 
@@ -32,16 +33,16 @@ class CRModel(nn.Module):
         # 4 total inputs for RNN, (input_size=32*4*4, hidden_size=64, num_layers=1)
         # 6 embeddings per RNN input seq
         inputs = []
-        dtype = torch.cuda.float if torch.cuda.is_available() else torch.float
+        # dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.float
         for i in range(5):
             for j in range(4):
-                m = torch.zeros((6, batch_size, 32*4*4),dtype=dtype)
+                m = torch.zeros((6, batch_size, 32*4*4)).to(self.device)
                 cnnout = self.cnn(panels[:,i:i+1,:,:])  # (128, 32, 4, 4)
                 m[i,:,:] = cnnout.view(batch_size, -1) 
                 inputs.append(m) 
-        self.rnn = nn.RNN(32*4*4, 64) 
-        self.outputs = torch.zeros((batch_size,4), dtype=dtype)
-        self.linear = nn.Linear(64,1) 
+        self.rnn = nn.RNN(32*4*4, 64).to(self.device) 
+        self.outputs = torch.zeros((batch_size,4)).to(self.device)
+        self.linear = nn.Linear(64,1).to(self.device) 
         for i in range(5,9):
             cnnout = self.cnn(panels[:,i:i+1,:,:])
             inputs[i-5][5,:,:] = cnnout.view(batch_size, -1)
@@ -55,7 +56,7 @@ class CRModel(nn.Module):
         # a tuple with two elements
         # with size (6, 128, 64), (1, 128, 64)
         # print(outputs[0].shape)
-        self.softmax = nn.Softmax(dim=1) 
+        self.softmax = nn.Softmax(dim=1).to(self.device) 
         return self.softmax(self.outputs) 
 
         
