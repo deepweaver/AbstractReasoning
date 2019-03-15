@@ -1,0 +1,6 @@
+__pycache__/
+saved_models/
+tmp.py
+tmp/
+.DS_Store
+
